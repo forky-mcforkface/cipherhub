@@ -128,9 +128,7 @@ keyOf(user, function (err, keys, fromGithub) {
     function encrypt () {
         var enc = rsa.encrypt(keys[0], { encoding: argv.encoding });
         process.stdin.pipe(enc).pipe(process.stdout);
-        process.stdin.on('close', function () {
-            console.log();
-        });
+        enc.on('end', function () { process.stdout.write('\n') });
     }
 });
 
