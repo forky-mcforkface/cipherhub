@@ -14,10 +14,17 @@ cipherhub USERNAME {OPTIONS} < message.txt
     --no-github  don't request key data from github, just fail
 
 cipherhub --add USERNAME < id_rsa.pub
+cipherhub -a USERNAME < id_rsa.pub
 
   Set the public key for USERNAME from stdin.
 
-cipherhub --rm USERNAME
+cipherhub --remove USERNAME
+cipherhub -r USERNAME
 
   Remove a USERNAME from the local key list.
+
+cipherhub --list
+cipherhub -l
+
+  List all the keys in the local key list.
 

@@ -19,28 +19,56 @@ var argv = minimist(process.argv.slice(2), {
         d: 'decrypt',
         a: 'add',
         l: [ 'ls', 'list' ],
-        r: [ 'rm', 'remove' ]
+        r: [ 'rm', 'remove' ],
+        h: 'help'
     }
 });
 
+if (argv.help) {
+    return fs.createReadStream(__dirname + '/usage.txt')
+        .pipe(process.stdout)
+    ;
+}
+
 if (argv.add) {
     var user = argv.add;
-    process.stdin.pipe(concat(function (body) {
+    if (user === true) {
+        console.error('usage: cipherhub --add USER < id_rsa.pub');
+        return process.exit(22);
+    }
+    
+    return process.stdin.pipe(concat(function (body) {
         db.put(user, body.toString('utf8'), function (err) {
             if (err) {
                 console.error(err);
                 process.exit(11);
             }
-            else console.log('added key for ' + user);
+            else console.log(
+                'added key for', user,
+                '(' + body.length + ' bytes)'
+            );
         });
     }));
-    return;
 }
 if (argv.list) {
-    return console.error('TODO');
+    return db.createReadStream().on('data', function (row) {
+        console.log(row.key, row.value.trim());
+    });
 }
 if (argv.remove) {
-    return console.error('TODO');
+    var user = argv.remove;
+    if (user === true) {
+        console.error('usage: cipherhub --rm USER');
+        return process.exit(23);
+    }
+    
+    return db.del(user, function (err) {
+        if (err) {
+            console.error(err);
+            process.exit(12);
+        }
+        else console.log('removed key for ' + user);
+    });
 }
 if (argv.decrypt) {
     return console.error('TODO');
