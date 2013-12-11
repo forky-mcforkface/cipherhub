@@ -22,6 +22,16 @@ var argv = minimist(process.argv.slice(2), {
     }
 });
 
+if (argv.add) {
+    return console.error('TODO');
+}
+if (argv.remove) {
+    return console.error('TODO');
+}
+if (argv.decrypt) {
+    return console.error('TODO');
+}
+
 if (argv._.length === 0) {
     fs.createReadStream(__dirname + '/usage.txt').pipe(process.stdout);
     return;
