@@ -3,14 +3,10 @@
 var fs = require('fs');
 var path = require('path');
 var mkdirp = require('mkdirp');
-var level = require('level');
 var hyperquest = require('hyperquest');
 var concat = require('concat-stream');
 var rsa = require('rsa-stream');
-
 var HOME = process.env.HOME || process.env.USERPROFILE;
-mkdirp.sync(path.join(HOME, '.config', 'cipherhub'));
-var db = level(path.join(HOME, '.config', 'cipherhub', 'keys.db'));
 
 var minimist = require('minimist');
 var argv = minimist(process.argv.slice(2), {
@@ -33,6 +29,34 @@ if (argv.help) {
         .pipe(process.stdout)
     ;
 }
+if (argv.decrypt) {
+    var keyfile = argv.decrypt;
+    if (keyfile === true) {
+        keyfile = path.join(
+            process.env.HOME || process.env.USERPROFILE,
+            '.ssh', 'id_rsa'
+        );
+    }
+    return fs.readFile(keyfile, function (err, privkey) {
+        if (err) {
+            console.error(err);
+            process.exit(1);
+        }
+        process.stdin
+            .pipe(rsa.decrypt(privkey, { encoding: argv.encoding }))
+            .pipe(process.stdout)
+        ;
+    });
+}
+
+if (argv._.length === 0) {
+    fs.createReadStream(__dirname + '/usage.txt').pipe(process.stdout);
+    return;
+}
+
+var level = require('level');
+mkdirp.sync(path.join(HOME, '.config', 'cipherhub'));
+var db = level(path.join(HOME, '.config', 'cipherhub', 'keys.db'));
 
 if (argv.add) {
     var user = argv.add;
@@ -73,14 +97,6 @@ if (argv.remove) {
         }
         else console.log('removed key for ' + user);
     });
-}
-if (argv.decrypt) {
-    return console.error('TODO');
-}
-
-if (argv._.length === 0) {
-    fs.createReadStream(__dirname + '/usage.txt').pipe(process.stdout);
-    return;
 }
 
 var user = argv._[0];
