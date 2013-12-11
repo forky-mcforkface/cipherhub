@@ -18,11 +18,25 @@ var argv = minimist(process.argv.slice(2), {
         e: 'encoding',
         d: 'decrypt',
         a: 'add',
+        l: [ 'ls', 'list' ],
         r: [ 'rm', 'remove' ]
     }
 });
 
 if (argv.add) {
+    var user = argv.add;
+    process.stdin.pipe(concat(function (body) {
+        db.put(user, body.toString('utf8'), function (err) {
+            if (err) {
+                console.error(err);
+                process.exit(11);
+            }
+            else console.log('added key for ' + user);
+        });
+    }));
+    return;
+}
+if (argv.list) {
     return console.error('TODO');
 }
 if (argv.remove) {
