@@ -20,7 +20,11 @@ var argv = minimist(process.argv.slice(2), {
         a: 'add',
         l: [ 'ls', 'list' ],
         r: [ 'rm', 'remove' ],
+        q: 'quiet',
         h: 'help'
+    },
+    'default': {
+        encoding: 'base64'
     }
 });
 
@@ -79,7 +83,8 @@ if (argv._.length === 0) {
     return;
 }
 
-keyOf(argv._[0], function (err, keys) {
+var user = argv._[0];
+keyOf(user, function (err, keys, fromGithub) {
     if (err) {
         console.error(err);
         return process.exit(10);
@@ -88,38 +93,57 @@ keyOf(argv._[0], function (err, keys) {
         console.error(
             'No RSA keys available for the requested user.\n'
             + 'Add a key manually by doing:\n\n'
-            + '  cipherhub --add ' + argv._[0] + ' < rsa.pub'
+            + '  cipherhub --add ' + user + ' < rsa.pub'
             + '\n'
         );
         return process.exit(20);
     }
     if (keys.length > 1) {
         console.error(
-            'Multiple keys available for the user: ' + argv._[0] + ':\n\n'
+            'Multiple keys available for the user: ' + user + ':\n\n'
             + keys.map(function (key) {
                 return '  ' + key;
             }).join('\n') + '\n\n'
             + 'Add a key manually by doing:\n\n'
-            + ' cipherhub --add ' + argv._[0] + ' <<< KEYDATA\n'
+            + ' cipherhub --add ' + user + ' <<< KEYDATA\n'
             + '\n'
         );
         return process.exit(21);
     }
     
-    var enc = rsa.encrypt(keys[0], { encoding: argv.encoding });
-    process.stdin.pipe(enc).pipe(process.stdout);
+    if (fromGithub && argv.save !== false) {
+        db.put(user, keys[0], function (err) {
+            if (err) {
+                console.error('Error saving key for user', user + ':');
+                console.error(err);
+            }
+            else if (!argv.quiet) {
+                console.error('# saved new key for user ', user);
+                encrypt();
+            }
+        });
+    }
+    else encrypt();
+    
+    function encrypt () {
+        var enc = rsa.encrypt(keys[0], { encoding: argv.encoding });
+        process.stdin.pipe(enc).pipe(process.stdout);
+        process.stdin.on('close', function () {
+            console.log();
+        });
+    }
 });
 
 function keyOf (user, cb) {
     db.get(user, function (err, row) {
-        if (err.name === 'NotFoundError') {
+        if (err && err.name === 'NotFoundError') {
             if (argv.github === false) {
                 cb(null, undefined);
             }
-            else githubKeys(user, cb);
+            else githubKeys(user, cb, true);
         }
         else if (err) cb(err)
-        else cb(null, row)
+        else cb(null, [row])
     });
 }
 

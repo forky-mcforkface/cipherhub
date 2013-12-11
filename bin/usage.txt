@@ -12,6 +12,8 @@ cipherhub USERNAME {OPTIONS} < message.txt
   OPTIONS are:
  
     --no-github  don't request key data from github, just fail
+    --no-save    don't automatically save keys fetched from github
+    --quiet, -q  suppress extra output
 
 cipherhub --add USERNAME < id_rsa.pub
 cipherhub -a USERNAME < id_rsa.pub
