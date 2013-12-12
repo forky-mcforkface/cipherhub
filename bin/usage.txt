@@ -11,9 +11,10 @@ cipherhub USERNAME {OPTIONS} < message.txt
  
   OPTIONS are:
  
-    --no-github  don't request key data from github, just fail
-    --no-save    don't automatically save keys fetched from github
-    --quiet, -q  suppress extra output
+    --no-github     don't request key data from github, just fail
+    --no-save       don't automatically save keys fetched from github
+    --quiet, -q     suppress extra output
+    --encoding, -e  output encoding to use. default: base64
 
 cipherhub --add USERNAME < id_rsa.pub
 cipherhub -a USERNAME < id_rsa.pub
@@ -29,4 +30,14 @@ cipherhub --list
 cipherhub -l
 
   List all the keys in the local key list.
+
+cipherhub --decrypt PRIVKEY {OPTIONS}
+cipherhub -d PRIVKEY {OPTIONS}
+
+  Decrypt a message on stdin with an rsa key file PRIVKEY.
+  If PRIVKEY isn't specified, only `-d` by itself, cipherhub uses ~/.ssh/id_rsa
+
+  OPTIONS are:
+
+    --encoding, -e  input encoding. default: base64
 
