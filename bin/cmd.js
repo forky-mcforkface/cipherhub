@@ -6,6 +6,7 @@ var mkdirp = require('mkdirp');
 var hyperquest = require('hyperquest');
 var concat = require('concat-stream');
 var rsa = require('rsa-stream');
+var level = require('level');
 var HOME = process.env.HOME || process.env.USERPROFILE;
 
 var minimist = require('minimist');
@@ -23,6 +24,8 @@ var argv = minimist(process.argv.slice(2), {
         encoding: 'base64'
     }
 });
+
+var db;
 
 if (argv.help) {
     return fs.createReadStream(__dirname + '/usage.txt')
@@ -48,22 +51,13 @@ if (argv.decrypt) {
         ;
     });
 }
-
-if (argv._.length === 0) {
-    fs.createReadStream(__dirname + '/usage.txt').pipe(process.stdout);
-    return;
-}
-
-var level = require('level');
-mkdirp.sync(path.join(HOME, '.config', 'cipherhub'));
-var db = level(path.join(HOME, '.config', 'cipherhub', 'keys.db'));
-
 if (argv.add) {
     var user = argv.add;
     if (user === true) {
         console.error('usage: cipherhub --add USER < id_rsa.pub');
         return process.exit(22);
     }
+    db = getDb();
     
     return process.stdin.pipe(concat(function (body) {
         db.put(user, body.toString('utf8'), function (err) {
@@ -79,6 +73,7 @@ if (argv.add) {
     }));
 }
 if (argv.list) {
+    db = getDb();
     return db.createReadStream().on('data', function (row) {
         console.log(row.key, row.value.trim());
     });
@@ -89,6 +84,7 @@ if (argv.remove) {
         console.error('usage: cipherhub --rm USER');
         return process.exit(23);
     }
+    db = getDb();
     
     return db.del(user, function (err) {
         if (err) {
@@ -98,8 +94,14 @@ if (argv.remove) {
         else console.log('removed key for ' + user);
     });
 }
+if (argv._.length === 0) {
+    fs.createReadStream(__dirname + '/usage.txt').pipe(process.stdout);
+    return;
+}
+
 
 var user = argv._[0];
+db = getDb();
 keyOf(user, function (err, keys, fromGithub) {
     if (err) {
         console.error(err);
@@ -137,6 +139,7 @@ keyOf(user, function (err, keys, fromGithub) {
                 console.error('# saved new key for user ', user);
                 encrypt();
             }
+            else encrypt();
         });
     }
     else encrypt();
@@ -154,7 +157,9 @@ function keyOf (user, cb) {
             if (argv.github === false) {
                 cb(null, undefined);
             }
-            else githubKeys(user, cb, true);
+            else githubKeys(user, function (err, keys) {
+                cb(err, keys, true);
+            })
         }
         else if (err) cb(err)
         else cb(null, [row])
@@ -177,4 +182,9 @@ function githubKeys (user, cb) {
         ;
         cb(null, keys);
     }));
+}
+
+function getDb () {
+    mkdirp.sync(path.join(HOME, '.config', 'cipherhub'));
+    return level(path.join(HOME, '.config', 'cipherhub', 'keys.db'));
 }
