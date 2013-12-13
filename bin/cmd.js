@@ -32,25 +32,7 @@ if (argv.help) {
         .pipe(process.stdout)
     ;
 }
-if (argv.decrypt) {
-    var keyfile = argv.decrypt;
-    if (keyfile === true) {
-        keyfile = path.join(
-            process.env.HOME || process.env.USERPROFILE,
-            '.ssh', 'id_rsa'
-        );
-    }
-    return fs.readFile(keyfile, function (err, privkey) {
-        if (err) {
-            console.error(err);
-            process.exit(1);
-        }
-        process.stdin
-            .pipe(rsa.decrypt(privkey, { encoding: argv.encoding }))
-            .pipe(process.stdout)
-        ;
-    });
-}
+
 if (argv.add) {
     var user = argv.add;
     if (user === true) {
@@ -94,6 +76,40 @@ if (argv.remove) {
         else console.log('removed key for ' + user);
     });
 }
+
+//assume the user is decrypting when there is no args,
+//but they are piping something in.
+if(!argv.decrypt && (argv._.length === 0 && !process.stdin.isTTY))
+  argv.decrypt = true
+
+if (argv.decrypt) {
+    var keyfile = argv.decrypt;
+    if (keyfile === true) {
+        keyfile = path.join(
+            process.env.HOME || process.env.USERPROFILE,
+            '.ssh', 'id_rsa'
+        );
+    }
+    return fs.readFile(keyfile, function (err, privkey) {
+        if (err) {
+            console.error(err);
+            process.exit(1);
+        }
+        process.stdin
+            .pipe(rsa.decrypt(privkey, { encoding: argv.encoding }))
+            .on('error', onError)
+            .pipe(process.stdout)
+        ;
+
+        function onError (err) { 
+            console.error('cipherhub: you tried to decrypt something')
+            console.error('           that was not a message for you!')
+            throw err
+        }
+    });
+}
+
+
 if (argv._.length === 0) {
     fs.createReadStream(__dirname + '/usage.txt').pipe(process.stdout);
     return;
