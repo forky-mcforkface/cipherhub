@@ -101,7 +101,7 @@ if (argv.decrypt) {
             .pipe(process.stdout)
         ;
 
-        function onError (err) { 
+        function onError (err) {
             console.error('cipherhub: you tried to decrypt something')
             console.error('           that was not a message for you!')
             throw err
