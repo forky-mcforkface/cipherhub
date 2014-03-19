@@ -2,6 +2,8 @@
 
 encrypt messages based on ssh public keys
 
+![cipherhub](http://substack.net/images/cipherhub.png)
+
 It can be frustrating and annoying to communicate with somebody using public key
 cryptography since setting up PGP/GPG is a hassle, particularly managing
 keyrings and webs of trust.

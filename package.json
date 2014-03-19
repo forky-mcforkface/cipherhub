@@ -9,7 +9,8 @@
     "level": "~0.18.0",
     "minimist": "~0.0.5",
     "mkdirp": "~0.3.5",
-    "rsa-stream": "~0.0.1"
+    "rsa-stream": "~0.0.1",
+    "green-jwt": "0.0.5-alpha"
   },
   "repository": {
     "type": "git",
