@@ -5,7 +5,7 @@ var path = require('path');
 var mkdirp = require('mkdirp');
 var hyperquest = require('hyperquest');
 var concat = require('concat-stream');
-var rsa = require('rsa-stream');
+var rsa = require('hybrid-rsa-stream');
 var level = require('level');
 var HOME = process.env.HOME || process.env.USERPROFILE;
 
