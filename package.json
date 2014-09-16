@@ -1,6 +1,6 @@
 {
   "name": "cipherhub",
-  "version": "0.1.1",
+  "version": "1.0.0",
   "description": "encrypt messages based on github ssh public keys",
   "bin": "bin/cmd.js",
   "dependencies": {
